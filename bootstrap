@@ -6,22 +6,31 @@ GIT_DIR="${HOME}/git"
 BOOTSTRAP_DIR="${GIT_DIR}/bootstrap"
 BIN_DIR=${HOME}/bin
 
-if [ "$0" == "bootstrap_setup" ]; then
-	cd "${BOOTSTRAP_DIR}"
-	zsh bootstrap2.sh
-	exit
-fi
 
-if [ -d "${BOOTSTRAP_DIR}/.git" ]; then
-  if [ "$1" != "NOUPDATE" ]; then
-    echo Bootstrap repos exists. Updating...
+bootstrap_update()
+{
     cd "${BOOTSTRAP_DIR}"
     if git pull | grep -w bootstrap; then
       echo Bootstrap might have been modified.
       echo Restarting...
       ${BOOTSTRAP_DIR}/bootstrap NOUPDATE
-			exit
+      exit
     fi
+}
+
+
+if [ $(basename "$0") = "bootstrap_setup" ]; then
+	cd "${BOOTSTRAP_DIR}"
+	zsh bootstrap2.sh
+	exit
+elif [ $(basename "$0") = "bootstrap_update" ]; then
+	bootstrap_update
+fi
+
+if [ -d "${BOOTSTRAP_DIR}/.git" ]; then
+  if [ "$1" != "NOUPDATE" ]; then
+    echo Bootstrap repos exists. Updating...
+    bootstrap_update
   fi
 else
   echo No bootstrap repo, downloading from github...
@@ -34,12 +43,13 @@ fi
 
 #setup bootstrap in ~/bin
 mkdir -p ${BIN_DIR}
-if [ ! -e ${BIN_DIR}/bootstrap ]; then
-  ln -s ${BOOTSTRAP_DIR}/bootstrap ${BIN_DIR}/bootstrap
+if [ ! -e ${BIN_DIR}/bootstrap_update ]; then
+  ln -s ${BOOTSTRAP_DIR}/bootstrap ${BIN_DIR}/bootstrap_update
+  echo bootstrap_update link created in ${BIN_DIR}
+elif [ ! -e ${BIN_DIR}/bootstrap_setup ]; then
   ln -s ${BOOTSTRAP_DIR}/bootstrap ${BIN_DIR}/bootstrap_setup
-  echo Ok, bootstrap installed in ${BIN_DIR}
-  echo Now, run the following: ${BIN_DIR}/bootstrap_setup
-  exit
-else
-  echo Run ${BIN_DIR}/bootstrap_setup
+  echo bootstrap_setup link created in ${BIN_DIR}
 fi
+
+echo To update bootstrap, run ${BIN_DIR}/bootstrap_update
+echo To configure, run ${BIN_DIR}/bootstrap_setup
