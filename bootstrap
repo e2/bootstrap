@@ -15,6 +15,7 @@ else
   cd "${GIT_DIR}"
   git clone git://github.com/e2/bootstrap.git
   cd "${BOOTSTRAP_DIR}"
+  exit
 fi
 
 zsh bootstrap2.sh
