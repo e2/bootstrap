@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+GIT_DIR=${HOME}/git
+BOOTSTRAP_DIR=${GIT_DIR}/bootstrap
+
+if [[ -d ${BOOTSTRAP_DIR}/.git ]]; then
+  echo Bootstrap repos exists. Updating...
+  cd ${BOOTSTRAP_DIR}
+  git pull
+else
+  echo No bootstrap repo, downloading from github...
+  cd ${GIT_DIR}
+  git clone git@github.com:e2/bootstrap.git
+  cd ${BOOTSTRAP_DIR}
+fi
+
+sh bootstrap2.sh
