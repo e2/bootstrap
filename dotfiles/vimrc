@@ -49,7 +49,8 @@ set smartcase " Ignore case when searching lowercase
 "set t_Co=256 " 256 colors
 set background=dark 
 syntax on " syntax highlighting
-colorscheme ir_black
+"colorscheme ir_black
+colorscheme elflord
 
 
 " Status Line *****************************************************************
@@ -69,6 +70,8 @@ imap jj <Esc>
 imap uu _
 imap hh =>
 imap aa @
+imap l; <esc> 
+imap ;l <esc> 
 
 
 " Directories *****************************************************************
