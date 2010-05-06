@@ -1,0 +1,5 @@
+#TODO put standard excludes here
+*.orig
+*.o
+*.so
+*.swp

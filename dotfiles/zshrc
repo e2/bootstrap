@@ -1,0 +1,288 @@
+# Lines configured by zsh-newuser-install
+export TMP=/tmp
+HISTFILE="${HOME}/.zhistory"
+SAVEHIST=40000
+HISTSIZE=50000
+setopt appendhistory autocd extendedglob nomatch notify
+unsetopt beep
+bindkey -v
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename "$HOME/.zshrc"
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+export ROOTTEXT="%(!.-=*[ROOT ZSH]*=-.)"
+export ROOTPROMPTADD="%(!. .)"
+export ROOTTITLEADD="%(!. | .)"
+
+if (( EUID == 0 ))
+then
+    PS2="%B$PS2%b"
+    PS3="%B$PS3%b"
+    PS4="%B$PS4%b"
+    SPROMPT="%B$SPROMPT%b"
+    # Rewt do not use ispell, E-Mail, Usenet News or IRC.
+    unset MAIL MAILCHECK MAILPATH 2> /dev/null
+    unset IRCNAME IRCSERVER IRCNICK 2> /dev/null
+    unset NNTPSERVER 2> /dev/null
+    unset SSH_AGENT_PID SSH_AUTH_SOCK 2> /dev/null
+    unset hostnames mailpath 2> /dev/null
+    unset DICTIONARY
+fi
+
+
+# See man page strftime(3) for more details.
+MY_DATE="%D{%a %d %b %Y}"
+MY_TIME="%D{%H:%M:%S}"
+
+DIRSTACKSIZE=10
+alias history='fc -li -n 20'
+
+ZLS_COLORS="$LS_COLORS"
+export ZLS_COLORS
+zmodload zsh/complist 2> /dev/null
+
+autoload run-help
+
+umask 022
+
+if (( EUID == 0 ))
+then
+    COLOR_ROOT_BOLD="%{"$'\e[01m'"%}"
+    COLOR_RESET="%{"$'\e[39;49;01m'"%}"
+else
+    COLOR_ROOT_BOLD=""
+    COLOR_RESET="%{"$'\e[39;49;00m'"%}"
+fi
+
+COLOR_REAL_RESET="%{"$'\e[39;49;00m'"%}"
+
+colorize()
+{
+    COLOR_p_h="%{"$'\e[32;44m'"%}"
+    COLOR_p_l="%{"$'\e[32;44m'"%}"
+    COLOR_p_y="%{"$'\e[32;44m'"%}"
+
+    COLOR_p_n="%{"$'\e[35m'"%}"
+    COLOR_at="%{"$'\e[35m'"%}"
+    COLOR_p_m="%{"$'\e[35m'"%}"
+
+    COLOR_WHOLEHOST="%{"$'\e[35;00m'"%}"
+    COLOR_SHORTHOST="%{"$'\e[35;00m'"%}"
+    COLOR_DOMAINHOST="%{"$'\e[35;00m'"%}"
+
+    COLOR_p_D="%{"$'\e[31;00m'"%}"
+    COLOR_MY_DATE="%{"$'\e[31;00m'"%}"
+    COLOR_p_star="%{"$'\e[31;00m'"%}"
+    COLOR_MY_TIME="%{"$'\e[31;00m'"%}"
+
+    COLOR_ROOT="%{"$'\e[01;31;43m'"%}"
+
+    if (( EUID == 0 ))
+    then
+        COLOR_p_hash="${COLOR_ROOT}"
+        COLOR_p_slash="${COLOR_ROOT}"
+    else
+        COLOR_p_hash="%{"$'\e[01;03;33;44m'"%}"
+        COLOR_p_slash="%{"$'\e[31;00m'"%}"
+    fi
+
+    $LATEST_PROMPT
+}
+
+uncolorize()
+{
+    COLOR_p_h="${COLOR_RESET}"
+    COLOR_p_l="${COLOR_RESET}"
+    COLOR_p_y="${COLOR_RESET}"
+
+    COLOR_p_n="${COLOR_RESET}"
+    COLOR_at="${COLOR_RESET}"
+    COLOR_p_m="${COLOR_RESET}"
+
+    COLOR_WHOLEHOST="${COLOR_RESET}"
+    COLOR_SHORTHOST="${COLOR_RESET}"
+    COLOR_DOMAINHOST="${COLOR_RESET}"
+
+    COLOR_p_D="${COLOR_RESET}"
+    COLOR_MY_DATE="${COLOR_RESET}"
+    COLOR_p_star="${COLOR_RESET}"
+    COLOR_MY_TIME="${COLOR_RESET}"
+
+    COLOR_ROOT="%{"$'\e[39;49;01m'"%}"
+
+    if (( EUID == 0 ))
+    then
+        COLOR_p_hash="%s${COLOR_ROOT}"
+        COLOR_p_slash="%s${COLOR_ROOT}"
+    else
+        COLOR_p_hash="${COLOR_RESET}"
+        COLOR_p_slash="${COLOR_RESET}"
+    fi
+
+    $LATEST_PROMPT
+}
+
+colorize
+
+
+mythreelinetimeprompt()
+{
+export PS1="${COLOR_ROOT_BOLD}${COLOR_ROOT}%S${ROOTTEXT}%s${COLOR_RESET}$ROOTPROMPTADD${COLOR_p_n}%n${COLOR_RESET}${COLOR_at}@${COLOR_RESET}${COLOR_p_m}%m${COLOR_RESET}:${COLOR_p_slash}%3~${COLOR_RESET} ${COLOR_p_hash}%#${COLOR_REAL_RESET} "
+unset RPROMPT
+LATEST_PROMPT="mythreelinetimeprompt"
+}
+
+
+defaultprompt()
+{
+    # CHOOSE ONE PROMPT
+
+    #longprompt
+    #twolineprompt
+    #cuttwolineprompt
+    mythreelinetimeprompt
+    #cutthreelinetimeprompt
+}
+
+defaultprompt
+
+unalias which 2> /dev/null
+unalias cp 2> /dev/null
+unalias md 2> /dev/null
+unalias mkdir 2> /dev/null
+unalias mv 2> /dev/null
+
+alias wtf='whence -savc'
+alias g='git'
+
+alias lsd='ls -d *(-/DN)'       # list directories & symbolic links
+alias lsa='ls -ad .*'           # list files beginning with "."
+alias l='ls -l --color '           # list files beginning with "."
+alias lt='ls -lrt --color '           # list files beginning with "."
+#
+# {{{ Keybindings
+stty eof '^D'
+
+stty erase '^?'
+
+# Emacs keybindings.
+#bindkey -e
+
+# vi-like keybindings:
+bindkey -v
+
+bindkey "$(echotc kl)" backward-char
+bindkey "$(echotc kr)" forward-char
+bindkey "$(echotc ku)" up-line-or-history
+bindkey "$(echotc kd)" down-line-or-history
+
+bindkey '^R' history-incremental-search-backward
+
+bindkey "\e[3~" delete-char        # Delete
+
+bindkey "^X^I" expand-or-complete-prefix
+# }}}
+
+
+readme()
+{
+    local files
+    files=(./*([Rr][Ee][Aa][Dd]*[Mm][Ee]|[Ll][Uu][Ee]*[Mm]([Ii][Nn]|)[Uu][Tt])*(ND))
+    if (($#files))
+    then
+        $PAGER $files
+    else
+        print No README files.
+    fi
+}
+
+# {{{ Modules
+
+autoload -U zmv 2> /dev/null
+autoload zmv
+
+# }}}
+
+hostnames=(localhost)
+compctl -k hostnames telnet rlogin rsh ssh ping ftp ncftp lftp
+
+# This is from Risto J. Laitinen
+# Rmdir only real directories
+compctl -g '*(D/)' rmdir 
+
+# This is from Risto J. Laitinen
+# Cd/pushd only directories or symbolic links to directories
+compctl -g '*(D-/)' cd pushd
+
+compctl -g '*.(pdf)' acroread xpdf evince
+compctl -g '*.(ps|eps|ps.gz|eps.gz)' gv ghostview
+
+
+autoload compinit 2> /dev/null
+autoload -U compinit 2> /dev/null
+compinit 2> /dev/null
+
+
+# I had zsh 3.1.9-dev-8, when I did these and they seem to work fine with zsh
+# 4.0.2. If you have some other version, these might not work and especially if
+# you have version 3.0.* or older.
+
+zstyle ':completion:*' insert-unambiguous true
+zstyle ':completion:*' add-space true
+#zstyle ':completion:*' completer _list _oldlist _expand _complete _ignored _match _correct _approximate _prefix
+# Complete first as much as you can. Then show alternatives.
+zstyle ':completion:*' completer _complete _list _oldlist _expand _ignored _match _correct _approximate _prefix
+zstyle ':completion:*' completions 1
+zstyle ':completion:*' file-sort name
+zstyle ':completion:*' format 'Completing %d'
+zstyle ':completion:*' glob 1
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' ignore-parents pwd
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' max-errors 3 numeric
+zstyle ':completion:*' menu select=long-list select=0
+zstyle ':completion:*' old-menu false
+zstyle ':completion:*' original true
+zstyle ':completion:*' prompt '%e errors>'
+zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
+zstyle ':completion:*' special-dirs true
+zstyle ':completion:*' squeeze-slashes true
+zstyle ':completion:*' substitute 1
+zstyle ':completion:*' use-compctl true
+zstyle ':completion:*' verbose true
+zstyle ':completion:*' word true
+
+compdef _gnu_generic qiv
+
+setopt extendedhistory 
+#setopt   share_history
+setopt inc_append_history 
+alias :q='exit'
+
+du1 () { du -h --max-depth=1 "$@" | sort -k 1,1hr -k 2,2f; }
+
+ # Don't complete uninteresting users. 
+#zstyle ':completion:*:*:*:users' ignored-patterns \ 
+#        adm apache bin daemon fetchmail games gdm halt ident junkbust \ 
+#        named news nfsnobody nobody nscd ntp operator pcap  \ 
+#        rpc rpcuser rpm shutdown squid sshd sync uucp vcsa  \ 
+#        xfs adm alias at bin cron cyrus daemon ftp games    \ 
+#        gdm halt lp mail man mysql named news nobody nut    \ 
+#        operator portage postfix postgres postmaster qmaild \ 
+#        qmaill qmailp qmailq qmailr qmails shutdown smmsp   \ 
+#        squid sshd sync uucp vpopmail xfs lp mail mailnull  \ 
+#        postgres radvd root 
+
+zstyle ':completion:*:cd:*' tag-order local-directories directory-stack named-directories path-directories 
+#
+zstyle ':completion:*:users' ignored-patterns fetchmail 
+
+cdpath=(. ~)
+
+alias -g G='|grep -'

@@ -1,0 +1,150 @@
+# .bashrc
+
+LS_COLORS='no=00:fi=00:di=01;36:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.flac=01;35:*.mp3=01;35:*.mpc=01;35:*.ogg=01;35:*.wav=01;35:';
+export LS_COLORS
+
+export PATH=${PATH}:${HOME}/bin
+export DEFAULT_CHARSET=UTF-8
+
+ulimit -S -c 0 # no coredumps
+#ulimit -S -c unlimited # coredumps
+
+umask 0022
+
+
+set -o notify
+set -o noclobber
+#set -o ignoreeof
+set -o nounset
+#set -o xtrace # for debug
+
+# Enable options
+shopt -s cdspell
+shopt -s cdable_vars
+shopt -s checkhash
+shopt -s checkwinsize
+shopt -s mailwarn
+shopt -s sourcepath
+shopt -s no_empty_cmd_completion
+shopt -s cmdhist
+shopt -s histappend histreedit histverify
+shopt -s extglob
+shopt -s histappend
+PROMPT_COMMAND='history -a'
+
+
+# Disable
+shopt -u mailwarn
+unset MAILCHECK
+
+
+export HISTIGNORE="&:bg:fg:h:l:ll:ls:dum:lt:su:cd:df -m:exit:..:df -m .:cd torrent/not_covered:ps -A:pwd:startx"
+export HISTSIZE='30000'
+export HOSTFILE=$HOME/.hosts
+export HISTTIMEFORMAT="%Y.%m.%d %H:%M "
+
+alias cp='cp -i'
+alias mv='mv -i'
+alias mkdir='mkdir -p'
+alias rm='rm -i'
+alias grep='grep --color'
+alias quit='exit'
+alias ..='cd ..'
+
+alias l='ls -lF'
+alias la='ls -Al' 		# hidden files
+alias ls='ls -hF --color' 	#add colors
+alias lx='ls -lXB' 		# sort by ext
+alias lk='ls -lSr'		# sort by size
+alias lc='ls -lcr'		# sort by change time
+alias lu='ls -lur'		# sort by access time
+alias lr='ls -lR'		# recursive
+alias lt='ls -ltr'		# sort by date
+alias lm='ls -al |more'		# more
+alias laa='ls -lrt --time=atime'
+alias tree='tree -Csu'
+
+alias du='du -kxh'
+alias df='df -kTh'
+
+# less
+alias more='less'
+export PAGER=less
+#export LESSCHARSET='latin1'
+export LESSCHARSET='utf-8'
+#export LESSOPEN='|/usr/bin/lesspipe.sh %s 2>&-'
+export LESS='-i -w -z-4 -g -e -M -X -F -R -P%t?f%f \ :stdin .?pb%pb\%:?lbLine %lb:?bbByte %bb:-...'
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+if [ -f /etc/bash.basrc ]; then
+	. /etc/bash.bashrc
+fi
+
+export SVN_EDITOR=vim
+export EDITOR=vim
+export BROWSER=/usr/bin/firefox-3.5
+
+export TMP=/tmp
+export TMPDIR=/tmp
+export TEMPDIR=/tmp
+
+alias top='xtitle Processes on $HOST && top'
+alias make='xtitle Making $(basename $PWD) ; make'
+alias ncftp='xtitle ncFTP ; ncftp'
+
+
+shopt -s extglob
+set +o nounset
+
+complete -A hostname 	rsh rcp ssh sftp telnet rlogin ftp ping disk
+complete -A export 	printenv
+complete -A variable	export local readonly unset
+complete -A enabled 	builtin
+complete -A alias	alias unalias
+complete -A function 	function
+complete -A user	su mail finger
+
+complete -A helptopic	help
+complete -A shopt 	shopt
+complete -A stopped -P '%' bg
+complete -A job -P '%'  fg jobs disown
+
+complete -A directory mkdir rmdir
+complete -A directory -o default cd
+
+# Compression
+
+complete -f -o default -X '*.+(zip|ZIP)' zip
+complete -f -o default -X '!*.+(zip|ZIP)' unzip
+complete -f -o default -X '*.+(z|Z)' compress 
+complete -f -o default -X '!*.+(z|Z)' uncompress 
+complete -f -o default -X '*.+(gz|GZ)' gzip 
+complete -f -o default -X '!*.+(gz|GZ)' gunzip 
+complete -f -o default -X '*.+(bz2|BZ2)' bzip2 
+complete -f -o default -X '!*.+(bz2|BZ2)' bunzip2 
+
+complete -f -o default -X '!*.ps' gs ghostview ps2pdf ps2ascii
+complete -f -o default -X '!*.dvi' dvips dvipdf xdvi dviselect dvitype 
+complete -f -o default -X '!*.pdf' acroread pdf2ps 
+complete -f -o default -X '!*.+(pdf|ps)' gv 
+
+complete -f -o default -X '!*.texi*' makeinfo texi2dvi texi2html texi2pdf
+complete -f -o default -X '!*.tex' tex latex slitex
+complete -f -o default -X '!*.lyx' lyx
+complete -f -o default -X '!*.+(htm*|HTM*)' lynx html2ps
+complete -f -o default -X '!*.+(avi*|ogm|ogg|mkv|mp4|divx*)' mplayer 
+
+complete -f -o default -X '!*.+(jp*g|gif|xpm|png|bmp)' xv gimp 
+complete -f -o default -X '!*.pl' perl perl15
+complete -f -o default -X '!*.rar' unrar
+complete -f -o default -X '!*.rar' play_rar 
+complete -f -o default -X '!*.rpm' rpm 
+complete -f -o default -X '!*.pdf' xpdf 
+
+
+export COLORFGBG="default;default"
+
