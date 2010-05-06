@@ -6,13 +6,14 @@ GIT_DIR="${HOME}/git"
 BOOTSTRAP_DIR="${GIT_DIR}/bootstrap"
 
 if [ -d "${BOOTSTRAP_DIR}/.git" ]; then
-  if [ ! "$1" = "NOUPDATE" ]; then
+  if [ ! "$1" == "NOUPDATE" ]; then
     echo Bootstrap repos exists. Updating...
     cd "${BOOTSTRAP_DIR}"
     if git pull | grep -w bootstrap; then
       echo Bootstrap might have been modified.
       echo Restarting...
-      "${BOOTSTRAP_DIR}/bootstrap NOUPDATE"
+      ${BOOTSTRAP_DIR}/bootstrap NOUPDATE
+			exit
     fi
   fi
 else
