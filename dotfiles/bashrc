@@ -247,3 +247,9 @@ complete -f -o default -X '!*.pdf' xpdf
 
 export COLORFGBG="default;default"
 
+alias x='{ startx & }; exit'
+alias webshare='python -c "import SimpleHTTPServer;SimpleHTTPServer.test()"' 
+alias j='jobs -l'
+alias v='vim'
+
+if [[ -s /home/trzareq/.rvm/scripts/rvm ]] ; then source /home/trzareq/.rvm/scripts/rvm ; fi

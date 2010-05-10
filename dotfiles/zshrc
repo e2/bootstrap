@@ -14,6 +14,24 @@ autoload -Uz compinit
 compinit
 # End of lines added by compinstall
 
+# ~/.kshrc reads ~/.shinit.sh
+# but let's be sure
+
+if [ -n "$HOME_SHINIT" ]
+then
+    if [ "$HOME_SHINIT" -gt 0 ]
+    then
+        #echo PAH ~/.shinit.sh
+        :
+    fi
+else
+    #echo SUCK ~/.shinit.sh
+    . "${HOME}/.shinit.sh"
+    HOME_SHINIT="1"
+    export HOME_SHINIT
+
+fi
+
 export ROOTTEXT="%(!.-=*[ROOT ZSH]*=-.)"
 export ROOTPROMPTADD="%(!. .)"
 export ROOTTITLEADD="%(!. | .)"
@@ -150,12 +168,176 @@ defaultprompt()
 
 defaultprompt
 
+# }}}
+
+# {{{ Cool titlebars
+
+# (I want the same text to both title and icon)
+
+# Don't forget to check out my ~/.screenrc ! There is some stuff about
+# writing to titlebar when using screen.
+
+# DEFINE WHAT YOU WANT TO TITLE OF EVERY TERMINAL IN THIS ONE PLACE
+
+writetitle()
+{
+    # ${WINDOW} is set by a program called screen. Woohou!
+    export TITLETEXT="${ROOTTEXT}${ROOTTITLEADD}%n@%m:%d | ${COLUMNS}x${LINES} | %y${WINDOW:+.${WINDOW}}"
+}
+
+writeexectitle()
+{
+    #  export EXECTEXT0="${ROOTTEXT}${ROOTTITLEADD}"
+    #  export EXECTEXT1="%n@%m:%d : "
+    export EXECTEXT1="${ROOTTEXT}${ROOTTITLEADD}%n@%m:%d : "
+    export EXECTEXT2="$*"
+}
+
+# TERMINAL TYPES
+
+case "$TERM" in
+    *xterm*|rxvt*|putty*|gnome-terminal|*onsole|zvt|(dt|k|E|z)term)
+    precmd()
+    {
+        writetitle
+        print -Pn "\e]0;${TITLETEXT}\a"
+        unset TITLETEXT
+    }
+
+    preexec()
+    {
+        writeexectitle $1
+        print -Pn '\e]0;'"${EXECTEXT1}"
+        print -rn "${EXECTEXT2}"
+        print -Pn '\a'
+        unset EXECTEXT1 EXECTEXT2
+    }
+    ;;
+
+    vt100)
+    # This is weird but true:
+
+    # Apple's MacOS X includes a Terminal.app derived from the old NeXT
+    # Terminal.app. It is a partial VT100 emulation with some extensions.
+    #
+    # There are no function keys, at least not in version 41.
+    #
+    # It supports mouse pointer position reporting using xterm-like
+    # sequences (not used in these entries.) When using emacs, the cursor
+    # can be positioned using option-click.
+    #
+    # It provides partial ANSI color support (background colors interact
+    # badly with bold, though.) The monochrome (-m) entries are useful if
+    # you've disabled color support.
+    #
+    # The configurable titlebar is set using xterm-compatible sequences;
+    # it is used as a status bar in these entries.
+    #
+    # The MacRoman character encoding is used for some of the alternate
+    # characters in the "MacRoman" entries; the "ASCII" (-ascii) entries
+    # rely instead on Terminal.app's own buggy VT100 graphics emulation,
+    # which seems to think the character encoding is the old NeXT charset
+    # instead of MacRoman.
+    #
+    # Terminal.app reports "vt100" as the terminal type, but exports
+    # several environment variables which may aid detection in a shell
+    # profile:
+    #
+    # TERM=vt100
+    # TERM_PROGRAM=Apple_Terminal
+    # TERM_PROGRAM_VERSION=41
+
+
+    if test "$TERM_PROGRAM" = "Apple_Terminal"
+    then
+        precmd()
+        {
+            writetitle
+            print -Pn "\e]0;${TITLETEXT}\a"
+            unset TITLETEXT
+        }
+
+        preexec()
+        {
+            writeexectitle $1
+            print -Pn '\e]0;'"${EXECTEXT1}"
+            print -rn "${EXECTEXT2}"
+            print -Pn '\a'
+            unset EXECTEXT1 EXECTEXT2
+        }
+    fi
+    ;;
+
+
+    screen*)
+    precmd()
+    {
+        writetitle
+        print -Pn "\e_${TITLETEXT}\e\\"
+        unset TITLETEXT
+    }
+
+    preexec()
+    {
+        writeexectitle $1
+        print -Pn "\e_""${EXECTEXT1}"
+        print -rn "${EXECTEXT2}"
+        print -Pn "\e\\"
+        unset EXECTEXT1 EXECTEXT2
+    }
+    ;;
+
+    # I just wanted to speed up my zsh startup so I disabled this.
+    # UNCOMMENT THIS ONLY IF YOU ARE REALLY SO PERVERTED THAT YOU WANT TO
+    # TORTURE YOURSELF WITH THOSE DISTORTED PICTURES OF TERMINALS BEING
+    # OF TERMINAL TYPE sun-cmd :
+
+
+    # I HAVE ONLY ONCE SAT IN FRONT OF SOME SGI-BOX AND THIS SEEMED TO WORK
+    iris-ansi)
+    precmd()
+    {
+        writetitle
+        print -Pn "\eP1.y${TITLETEXT}\e\\" ## window title
+        print -Pn "\eP3.y${TITLETEXT}\e\\" ## icon title
+        unset TITLETEXT
+    }
+
+    preexec()
+    {
+        writeexectitle $1
+
+        print -Pn "\eP1.y${EXECTEXT1}" ## window title
+        print -rn "${EXECTEXT2}"       ## window title
+        print -Pn "\e\\"               ## window title
+
+        print -Pn "\eP3.y${EXECTEXT1}" ## icon title
+        print -rn "${EXECTEXT2}"       ## icon title
+        print -Pn "\e\\"               ## icon title
+        unset EXECTEXT1 EXECTEXT2
+    }
+    ;;
+
+
+    *)
+    true
+
+esac
+
+# }}}
+# {{{ Aliases
+
+# There may some crappy aliases in rc's of "inferior" Bourne-like
+# shells
+
 unalias which 2> /dev/null
 unalias cp 2> /dev/null
 unalias md 2> /dev/null
 unalias mkdir 2> /dev/null
 unalias mv 2> /dev/null
 
+# WHAT THE FSCK :-)
+# In my system /usr/games/wtf is some program
 alias wtf='whence -savc'
 alias g='git'
 
@@ -163,7 +345,15 @@ alias lsd='ls -d *(-/DN)'       # list directories & symbolic links
 alias lsa='ls -ad .*'           # list files beginning with "."
 alias l='ls -l --color '           # list files beginning with "."
 alias lt='ls -lrt --color '           # list files beginning with "."
-#
+
+# I HAVE UPGRADED TO XFree86 4.* AND THEN X.org
+# Therefore I have -depth and no more -bpp
+# FIXME: Create shell script
+alias myx='startx -- -dpi 100 -depth 24 & disown && exit'
+
+#alias myx8='startx -- -dpi 100 -depth 8 & disown && exit'
+#alias myx16='startx -- -dpi 100 -depth 16 & disown && exit'
+#alias myx24='startx -- -dpi 100 -depth 24 & disown && exit'
 # {{{ Keybindings
 stty eof '^D'
 
@@ -186,6 +376,636 @@ bindkey "\e[3~" delete-char        # Delete
 
 bindkey "^X^I" expand-or-complete-prefix
 # }}}
+# {{{ Functions
+
+# {{{ Inferior shells
+
+# PS1 really do not have effect if is configured again in $ENV-file
+# or in profile
+
+myash ()
+{
+    OLDPS1="$PS1"
+    OLDSHELL="$SHELL"
+    OLDENV="$ENV"
+
+    if test -x "/bin/dash"
+    then
+        SHELL="/bin/dash"
+        PS1='[/bin/dash] $ '
+        export PS1
+
+    elif test -x "/usr/bin/ash.medium"
+    then
+        SHELL="/usr/bin/ash.medium"
+        PS1='[/usr/bin/ash.medium] $ '
+        export PS1
+
+    elif test -x "/bin/ash"
+    then
+        SHELL=/bin/ash
+        PS1='[/bin/ash] $ '
+        export PS1
+    elif whence -p ash > /dev/null 2>&1
+    then
+        SHELL="`whence -p ash`"
+        PS1='['"$SHELL"'] $ '
+        export PS1
+    else
+        echo 'It seems you do not have (Debian) Almquist Shell installed at all' >&2
+        return 1
+    fi
+
+    NO_SWITCH="yes"
+    export NO_SWITCH
+    OLD_ZSH_VERSION="$ZSH_VERSION"
+    unset ZSH_VERSION
+
+    OLD_ETC_PROFILE="$ETC_PROFILE"
+    OLD_HOME_SHINIT="$HOME_SHINIT"
+    OLD_HOME_PROFILE="$HOME_PROFILE"
+    OLD_PROFILE_DEBIAN="$PROFILE_DEBIAN"
+    OLD_PROFILE_REDHAT="$PROFILE_REDHAT"
+
+    unset ETC_PROFILE
+    unset HOME_SHINIT
+    unset HOME_PROFILE
+
+    unset PROFILE_DEBIAN
+    unset PROFILE_REDHAT
+
+    . "$HOME/.profile"
+    ENV=$HOME/.shinit.sh
+    export ENV
+
+    SHELL="$SHELL" $SHELL "$@"
+
+    PS1="$OLDPS1"
+    SHELL="$OLDSHELL"
+    ENV="$OLDENV"
+    export ENV PS1
+    unset NO_SWITCH
+    ZSH_VERSION="$OLD_ZSH_VERSION"
+
+    ETC_PROFILE="$OLD_ETC_PROFILE"
+    HOME_SHINIT="$OLD_HOME_SHINIT"
+    HOME_PROFILE="$OLD_HOME_PROFILE"
+
+    PROFILE_DEBIAN="$OLD_PROFILE_DEBIAN"
+    PROFILE_REDHAT="$OLD_PROFILE_REDHAT"
+
+    unset OLDPS1 OLDSHELL OLDENV
+    unset OLD_ETC_PROFILE
+    unset OLD_HOME_SHINIT OLD_HOME_PROFILE
+    unset OLD_PROFILE_DEBIAN OLD_PROFILE_REDHAT
+}
+
+ash ()
+{
+    myash "$@"
+}
+
+dash ()
+{
+    myash "$@"
+}
+
+
+myposh ()
+{
+    OLDPS1="$PS1"
+    OLDSHELL="$SHELL"
+    OLDENV="$ENV"
+
+    if test -x "/bin/posh"
+    then
+        SHELL="/bin/posh"
+    elif test -x "/usr/bin/posh"
+    then
+        SHELL=/usr/bin/posh
+    else
+        echo 'It seems you do not have Policy-compliant Ordinary SHell installed at all' >&2
+        return 1
+    fi
+
+    NO_SWITCH="yes"
+    export NO_SWITCH
+
+    OLD_ZSH_VERSION="$ZSH_VERSION"
+    unset ZSH_VERSION
+
+    OLD_ETC_PROFILE="$ETC_PROFILE"
+    OLD_HOME_SHINIT="$HOME_SHINIT"
+    OLD_HOME_PROFILE="$HOME_PROFILE"
+    OLD_PROFILE_DEBIAN="$PROFILE_DEBIAN"
+    OLD_PROFILE_REDHAT="$PROFILE_REDHAT"
+
+    unset ETC_PROFILE
+    unset HOME_SHINIT
+    unset HOME_PROFILE
+
+    unset PROFILE_DEBIAN
+    unset PROFILE_REDHAT
+
+    . "$HOME/.profile"
+    ENV=$HOME/.shinit.sh
+    export ENV
+
+    PS1='[posh] $ '
+    export PS1
+
+    SHELL="$SHELL" $SHELL "$@"
+
+    PS1="$OLDPS1"
+    SHELL="$OLDSHELL"
+    ENV="$OLDENV"
+    export ENV PS1
+    unset NO_SWITCH
+    ZSH_VERSION="$OLD_ZSH_VERSION"
+
+    ETC_PROFILE="$OLD_ETC_PROFILE"
+    HOME_SHINIT="$OLD_HOME_SHINIT"
+    HOME_PROFILE="$OLD_HOME_PROFILE"
+
+    PROFILE_DEBIAN="$OLD_PROFILE_DEBIAN"
+    PROFILE_REDHAT="$OLD_PROFILE_REDHAT"
+
+    unset OLDPS1 OLDSHELL OLDENV
+    unset OLD_ETC_PROFILE
+    unset OLD_HOME_SHINIT OLD_HOME_PROFILE
+    unset OLD_PROFILE_DEBIAN OLD_PROFILE_REDHAT
+}
+
+posh ()
+{
+    myposh "$@"
+}
+
+
+mybash ()
+{
+    OLDPS1="$PS1"
+    OLDSHELL="$SHELL"
+    OLDENV="$ENV"
+
+    if test -x "/bin/bash"
+    then
+        SHELL="/bin/bash"
+    elif test -x "/usr/bin/bash"
+    then
+        SHELL="/usr/bin/bash"
+    elif test -x "/usr/local/bin/bash"
+    then
+        SHELL="/usr/local/bin/bash"
+    elif whence -p bash > /dev/null 2>&1
+    then
+        SHELL="`whence -p bash`"
+    else
+        echo 'It seems you do not have Bourne Again Shell installed at all' >&2
+        return 1
+    fi
+
+    NO_SWITCH="yes"
+    export NO_SWITCH
+    OLD_ZSH_VERSION="$ZSH_VERSION"
+    unset ZSH_VERSION
+
+    OLD_ETC_PROFILE="$ETC_PROFILE"
+    OLD_ETC_BASHRC="$ETC_BASHRC"
+    OLD_ETC_BASH_BASHRC="$ETC_BASH_BASHRC"
+    OLD_HOME_SHINIT="$HOME_SHINIT"
+    OLD_HOME_PROFILE="$HOME_PROFILE"
+    OLD_HOME_BASHRC="$HOME_BASHRC"
+    OLD_HOME_BASH_COMMON="$HOME_BASH_COMMON"
+    OLD_HOME_BASH_PROFILE="$HOME_BASH_PROFILE"
+    OLD_PROFILE_DEBIAN="$PROFILE_DEBIAN"
+    OLD_PROFILE_REDHAT="$PROFILE_REDHAT"
+
+    unset ETC_PROFILE
+    unset ETC_BASHRC
+    unset ETC_BASH_BASHRC
+    unset HOME_SHINIT
+    unset HOME_PROFILE
+    unset HOME_BASH_COMMON
+    unset HOME_BASHRC
+    unset HOME_BASH_PROFILE
+    unset PROFILE_DEBIAN
+    unset PROFILE_REDHAT
+
+    ENV=$HOME/.bashrc
+    export ENV
+    BASH_ENV=$HOME/.bashrc
+    export BASH_ENV
+
+    SHELL="$SHELL" $SHELL "$@"
+
+    PS1="$OLDPS1"
+    SHELL="$OLDSHELL"
+    ENV="$OLDENV"
+    export ENV PS1
+    unset BASH_ENV NO_SWITCH
+    ZSH_VERSION="$OLD_ZSH_VERSION"
+
+    ETC_PROFILE="$OLD_ETC_PROFILE"
+    ETC_BASHRC="$OLD_ETC_BASHRC"
+    ETC_BASH_BASHRC="$OLD_ETC_BASH_BASHRC"
+    HOME_SHINIT="$OLD_HOME_SHINIT"
+    HOME_PROFILE="$OLD_HOME_PROFILE"
+    HOME_BASH_COMMON="$OLD_HOME_BASH_COMMON"
+    HOME_BASHRC="$OLD_HOME_BASHRC"
+    HOME_BASH_PROFILE="$OLD_HOME_BASH_PROFILE"
+    PROFILE_DEBIAN="$OLD_PROFILE_DEBIAN"
+    PROFILE_REDHAT="$OLD_PROFILE_REDHAT"
+
+    unset OLDPS1 OLDSHELL OLDENV
+    unset OLD_ETC_PROFILE
+    unset OLD_HOME_BASH_COMMON
+    unset OLD_ETC_BASH_BASHRC
+    unset OLD_ETC_BASHRC
+    unset OLD_HOME_SHINIT OLD_HOME_PROFILE
+    unset OLD_HOME_BASHRC OLD_HOME_BASH_PROFILE
+    unset OLD_PROFILE_DEBIAN OLD_PROFILE_REDHAT
+
+}
+
+bash ()
+{
+    mybash "$@"
+}
+
+
+myksh ()
+{
+# PS1 really do not have effect if is configured again in $ENV-file,
+# or in profile. See ~/.kshrc
+    OLDPS1="$PS1"
+    OLDSHELL="$SHELL"
+    OLDENV="$ENV"
+
+    if test -x ${HOME}/ast/bin/package
+    then
+        ATTASTOPENARCH="`${HOME}/ast/bin/package host`"
+    elif test -x /opt/ast/bin/package
+    then
+        ATTASTOPENARCH="`/opt/ast/bin/package host`"
+    elif uname -m | egrep 'i.86' > /dev/null 2>&1
+    then
+        if uname -s | grep -i 'linux'  > /dev/null 2>&1
+        then
+            ATTASTOPENARCH="`uname -s | tr '[:upper:]' '[:lower:]'`.`uname -m | sed 's/i.86/i386/'`"
+        else
+            ATTASTOPENARCH=""
+        fi
+    else
+        ATTASTOPENARCH=""
+    fi
+    export ATTASTOPENARCH
+
+    # Debian GNU/Linux has AT&T KSH93 as a Debian-package. But in other
+    # Unixes you may need to compile it yourself.
+    if test -x "${HOME}/ast/arch/${ATTASTOPENARCH}/bin/ksh"
+    then
+        SHELL="${HOME}/ast/arch/${ATTASTOPENARCH}/bin/ksh"
+        PS1='['"${HOME}/ast/arch/${ATTASTOPENARCH}/bin/ksh"'] $ '
+        export PS1
+    elif test -x "${HOME}/ast/bin/ksh"
+    then
+        SHELL="${HOME}/ast/bin/ksh"
+        PS1='['"${HOME}/ast/bin/ksh"'] $ '
+        export PS1
+    elif test -x "${HOME}/bin/ksh"
+    then
+        SHELL="${HOME}/bin/ksh"
+        PS1='['"${HOME}/bin/ksh"'] $ '
+        export PS1
+    elif test -x "/opt/ast/bin/ksh"
+    then
+        SHELL="/opt/ast/bin/ksh"
+        PS1='[/opt/ast/bin/ksh] $ '
+        export PS1
+    elif test -x "/opt/ast/arch/${ATTASTOPENARCH}/bin/ksh"
+    then
+        SHELL="/opt/ast/arch/${ATTASTOPENARCH}/bin/ksh"
+        PS1='['"/opt/ast/arch/${ATTASTOPENARCH}/bin/ksh"'] $ '
+        export PS1
+
+    elif test -x "/bin/ksh93"
+    then 
+        SHELL="/bin/ksh93"
+        PS1='[/bin/ksh93] $ '
+        export PS1
+    elif test -x "/usr/bin/ksh93"
+    then 
+        SHELL="/usr/bin/ksh93"
+        PS1='[/usr/bin/ksh93] $ '
+        export PS1
+    elif test -x "/usr/dt/bin/ksh"
+    then 
+        # CDE has ksh93 with CDE-support. Let's try it first, because in
+        # such unixes /bin/ksh is probably just ksh88
+        SHELL="/usr/dt/bin/ksh"
+        PS1='[/usr/dt/bin/ksh] $ '
+        export PS1
+    elif test -x "/bin/ksh"
+    then
+        SHELL="/bin/ksh"
+        PS1='[/bin/ksh] $ '
+        export PS1
+    elif test -x "/usr/bin/ksh"
+    then
+        SHELL="/usr/bin/ksh"
+        PS1='[/usr/bin/ksh] $ '
+        export PS1
+    elif test -x "/bin/mksh"
+    then
+        # mksh is enhanced and bugfixed version of pdksh. It is done by
+        # MirBSD-team.
+        SHELL="/bin/mksh"
+        PS1='[/bin/mksh] $ '
+        export PS1
+    elif test -x "/bin/pdksh"
+    then
+        SHELL="/bin/pdksh"
+        PS1='[/bin/pdksh] $ '
+        export PS1
+    elif test -x "/usr/bin/pdksh"
+    then
+        SHELL="/usr/bin/pdksh"
+        PS1='[/usr/bin/pdksh] $ '
+        export PS1
+    elif whence -p ksh > /dev/null 2>&1
+    then
+        SHELL="`whence -p ksh`"
+        PS1='[$SHELL] $ '
+        export PS1
+    else
+        echo 'It seems you do not have any implementation of' >&2
+        echo 'Korn Shell language installed at all.' >&2
+        echo 'Hopefully you can make this zsh emulate ksh this way:' >&2
+        echo 'emulate ksh' >&2
+        return 1
+    fi
+
+    NO_SWITCH="yes"
+    export NO_SWITCH
+    OLD_ZSH_VERSION="$ZSH_VERSION"
+    unset ZSH_VERSION
+
+    OLD_ETC_PROFILE="$ETC_PROFILE"
+    OLD_HOME_SHINIT="$HOME_SHINIT"
+    OLD_HOME_PROFILE="$HOME_PROFILE"
+    OLD_PROFILE_DEBIAN="$PROFILE_DEBIAN"
+    OLD_PROFILE_REDHAT="$PROFILE_REDHAT"
+
+    unset ETC_PROFILE
+    unset HOME_SHINIT
+    unset HOME_PROFILE
+    unset PROFILE_DEBIAN
+    unset PROFILE_REDHAT
+
+    ENV="${HOME}/.kshrc"
+    export ENV
+    export NO_SWITCH
+
+    export PS1
+
+    SHELL="$SHELL" $SHELL "$@"
+
+    ETC_PROFILE="$OLD_ETC_PROFILE"
+    HOME_SHINIT="$OLD_HOME_SHINIT"
+    HOME_PROFILE="$OLD_HOME_PROFILE"
+
+    PROFILE_DEBIAN="$OLD_PROFILE_DEBIAN"
+    PROFILE_REDHAT="$OLD_PROFILE_REDHAT"
+
+    PS1="$OLDPS1"
+    SHELL="$OLDSHELL"
+    ENV="$OLDENV"
+    export PS1 ENV
+    unset OLDENV
+    unset NO_SWITCH
+    ZSH_VERSION="$OLD_ZSH_VERSION"
+
+    unset OLDPS1 OLDSHELL OLDENV
+    unset OLD_ETC_PROFILE
+    unset OLD_HOME_SHINIT OLD_HOME_PROFILE
+    unset OLD_PROFILE_DEBIAN OLD_PROFILE_REDHAT
+    unset ATTASTOPENARCH
+
+}
+
+ksh93 ()
+{
+    myksh "$@"
+}
+
+ksh ()
+{
+    myksh "$@"
+}
+
+mksh ()
+{
+    myksh "$@"
+}
+
+pdksh ()
+{
+    myksh "$@"
+}
+
+myjsh ()
+{
+    OLDPS1="$PS1"
+    OLDSHELL="$SHELL"
+    OLDENV="$ENV"
+
+    if test -x "${HOME}/heirloom/5bin/jsh"
+    then
+        SHELL="${HOME}/heirloom/5bin/jsh"
+        PS1='['"${HOME}/heirloom/5bin/jsh"'] $ '
+        export PS1
+    elif test -x "/opt/heirloom/5bin/jsh"
+    then
+        SHELL="/opt/heirloom/5bin/jsh"
+        PS1='[/opt/heirloom/5bin/jsh] $ '
+        export PS1
+    elif test -x "/usr/5bin/jsh"
+    then
+        SHELL="/usr/5bin/jsh"
+        PS1='[/usr/5bin/jsh] $ '
+        export PS1
+    elif test -x "/5bin/jsh"
+    then
+        SHELL="/5bin/jsh"
+        PS1='[/5bin/jsh] $ '
+        export PS1
+    elif test -x "/usr/bin/jsh"
+    then
+        SHELL="/usr/bin/jsh"
+        PS1='[/usr/bin/jsh] $ '
+        export PS1
+    elif test -x "/bin/jsh"
+    then
+        SHELL="/bin/jsh"
+        PS1='[/bin/jsh] $ '
+        export PS1
+    elif whence -p jsh > /dev/null 2>&1
+    then
+        SHELL="`whence -p jsh`"
+        PS1='[$'"{SHELL}"'] $ '
+        export PS1
+    else
+        echo 'It seems you do not have jsh installed at all.' >&2
+        return 1
+    fi
+
+
+    NO_SWITCH="yes"
+    export NO_SWITCH
+    OLD_ZSH_VERSION="$ZSH_VERSION"
+    unset ZSH_VERSION
+
+    OLD_ETC_PROFILE="$ETC_PROFILE"
+    OLD_HOME_SHINIT="$HOME_SHINIT"
+    OLD_HOME_PROFILE="$HOME_PROFILE"
+    OLD_PROFILE_DEBIAN="$PROFILE_DEBIAN"
+    OLD_PROFILE_REDHAT="$PROFILE_REDHAT"
+
+    unset ETC_PROFILE
+    unset HOME_SHINIT
+    unset HOME_PROFILE
+
+    unset PROFILE_DEBIAN
+    unset PROFILE_REDHAT
+
+    . "$HOME/.profile"
+    ENV="$HOME/.shinit.sh"
+    export ENV
+    SHELL="$SHELL" $SHELL "$@"
+    PS1="$OLDPS1"
+    SHELL="$OLDSHELL"
+    ENV="$OLDENV"
+    export ENV PS1
+    unset NO_SWITCH
+    ZSH_VERSION="$OLD_ZSH_VERSION"
+
+    ETC_PROFILE="$OLD_ETC_PROFILE"
+    HOME_SHINIT="$OLD_HOME_SHINIT"
+    HOME_PROFILE="$OLD_HOME_PROFILE"
+
+    PROFILE_DEBIAN="$OLD_PROFILE_DEBIAN"
+    PROFILE_REDHAT="$OLD_PROFILE_REDHAT"
+
+    unset OLDPS1 OLDSHELL OLDENV
+    unset OLD_ETC_PROFILE
+    unset OLD_HOME_SHINIT OLD_HOME_PROFILE
+    unset OLD_PROFILE_DEBIAN OLD_PROFILE_REDHAT
+
+}
+
+jsh ()
+{
+    myjsh "$@"
+}
+
+
+sh ()
+{
+    if myash "$@"
+    then
+        :
+    elif myjsh "$@"
+    then
+        :
+    elif myposh "$@"
+    then
+        :
+    else
+        OLDPS1="$PS1"
+        OLDSHELL="$SHELL"
+        OLDENV="$ENV"
+
+        if test -x "/usr/xpg4/bin/sh"
+        then
+            SHELL="/usr/xpg4/bin/sh"
+            PS1='[/usr/xpg4/bin/sh] $ '
+            export PS1
+        elif test -x "/usr/bin/jsh"
+        then
+            SHELL="/usr/bin/jsh"
+            PS1='[/usr/bin/jsh] $ '
+            export PS1
+        elif test -x "/bin/sh"
+        then
+            SHELL="/bin/sh"
+            PS1='[/bin/sh] $ '
+            export PS1
+        elif test -x "/usr/bin/sh"
+        then
+            SHELL="/usr/bin/sh"
+            PS1='[/usr/bin/sh] $ '
+            export PS1
+        elif whence -p sh > /dev/null 2>&1
+        then
+            SHELL="`whence -p sh`"
+            PS1='['"${SHELL}"'] $ '
+            export PS1
+        else
+            echo 'It seems you do not have Bourne Shell installed at all' >&2
+            echo 'In the other words: This machine must be b0rken!' >&2
+            echo 'You can try running bash or ksh.' >&2
+            return 1
+        fi
+
+
+        NO_SWITCH="yes"
+        export NO_SWITCH
+        OLD_ZSH_VERSION="$ZSH_VERSION"
+        unset ZSH_VERSION
+
+        OLD_ETC_PROFILE="$ETC_PROFILE"
+        OLD_HOME_SHINIT="$HOME_SHINIT"
+        OLD_HOME_PROFILE="$HOME_PROFILE"
+        OLD_PROFILE_DEBIAN="$PROFILE_DEBIAN"
+        OLD_PROFILE_REDHAT="$PROFILE_REDHAT"
+
+        unset ETC_PROFILE
+        unset HOME_SHINIT
+        unset HOME_PROFILE
+
+        unset PROFILE_DEBIAN
+        unset PROFILE_REDHAT
+
+        . "$HOME/.profile"
+        ENV="$HOME/.shinit.sh"
+        export ENV
+        SHELL="$SHELL" $SHELL "$@"
+        PS1="$OLDPS1"
+        SHELL="$OLDSHELL"
+        ENV="$OLDENV"
+        export ENV PS1
+        unset NO_SWITCH
+        ZSH_VERSION="$OLD_ZSH_VERSION"
+
+        ETC_PROFILE="$OLD_ETC_PROFILE"
+        HOME_SHINIT="$OLD_HOME_SHINIT"
+        HOME_PROFILE="$OLD_HOME_PROFILE"
+
+        PROFILE_DEBIAN="$OLD_PROFILE_DEBIAN"
+        PROFILE_REDHAT="$OLD_PROFILE_REDHAT"
+
+        unset OLDPS1 OLDSHELL OLDENV
+        unset OLD_ETC_PROFILE
+        unset OLD_HOME_SHINIT OLD_HOME_PROFILE
+        unset OLD_PROFILE_DEBIAN OLD_PROFILE_REDHAT
+
+    fi
+}
+
+
+# }}}
+
 
 
 readme()
@@ -206,6 +1026,7 @@ autoload -U zmv 2> /dev/null
 autoload zmv
 
 # }}}
+# {{{ compctl
 
 hostnames=(localhost)
 compctl -k hostnames telnet rlogin rsh ssh ping ftp ncftp lftp
@@ -218,6 +1039,18 @@ compctl -g '*(D/)' rmdir
 # Cd/pushd only directories or symbolic links to directories
 compctl -g '*(D-/)' cd pushd
 
+# This is from Risto J. Laitinen
+# TeX
+compctl -g '*.tex* *.ltx *.latex' + -g '*(-/)' tex latex amstex lamstex texi2dvi makeinfo
+compctl -g '*.dvi' + -g '*(-/)' xdvi dvips
+compctl -g '*.<->gf' gftodvi gftopk
+####
+# from Sven Guckes w/ my modification:
+# rcp completes hostnames with a `:' suffix or filenames or usernames with
+# `@' suffix. It completes hostnames after @.
+compctl -k hostnames -S ':~/' + -f + -x 'N[-1,@]' -k hostnames -S ':' - 's[]' -u -S '@' -- rcp scp scp1 scp2
+
+# my conversion
 compctl -g '*.(pdf)' acroread xpdf evince
 compctl -g '*.(ps|eps|ps.gz|eps.gz)' gv ghostview
 
@@ -264,8 +1097,12 @@ setopt extendedhistory
 #setopt   share_history
 setopt inc_append_history 
 alias :q='exit'
+alias vimx='echo -en "\033]50;-*-terminus-*-*-*-*-14-*-72-72-*-*-*-*\007" && vim'
 
 du1 () { du -h --max-depth=1 "$@" | sort -k 1,1hr -k 2,2f; }
+#zstyle ':completion::complete:*' use-cache on
+#zstyle ':completion::complete:*' cache-path ~/.zsh/cache/$HOST
+
 
  # Don't complete uninteresting users. 
 #zstyle ':completion:*:*:*:users' ignored-patterns \ 
@@ -286,3 +1123,6 @@ zstyle ':completion:*:users' ignored-patterns fetchmail
 cdpath=(. ~)
 
 alias -g G='|grep -'
+#export RUBYOPT='-rubygems -KU'
+
+if [[ -s /home/trzareq/.rvm/scripts/rvm ]] ; then source /home/trzareq/.rvm/scripts/rvm ; fi
