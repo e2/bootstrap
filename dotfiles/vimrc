@@ -1,4 +1,5 @@
-
+filetype off
+call pathogen#runtime_append_all_bundles()
 " -----------------------------------------------------------------------------  
 " |                            VIM Settings                                   |
 " |                   (see gvimrc for gui vim settings)                       |
@@ -50,6 +51,12 @@ set smartcase " Ignore case when searching lowercase
 set background=dark 
 syntax on " syntax highlighting
 "colorscheme ir_black
+" I like dark colors
+"colorscheme desert256 
+"colorscheme zenburn
+"colorscheme inkpot
+"colorscheme elflord
+" colorscheme vividchalk  " Uncomment this to set a default theme
 colorscheme elflord
 
 
@@ -70,14 +77,15 @@ imap jj <Esc>
 imap uu _
 imap hh =>
 imap aa @
-imap l; <esc> 
-imap ;l <esc> 
+imap l; <esc>
+imap ;l <esc>
+set timeoutlen=300
 
 
 " Directories *****************************************************************
 " Setup backup location and enable
 "set backupdir=~/backup/vim
-"set backup
+set backup
 
 " Set Swap directory
 "set directory=~/backup/vim/swap
@@ -114,12 +122,15 @@ set sessionoptions=blank,buffers,curdir,folds,help,resize,tabpages,winsize
 set backspace=indent,eol,start
 set number " Show line numbers
 set matchpairs+=<:>
-set vb t_vb= " Turn off the bell, this could be more annoying, but I'm not sure how
+set novisualbell " Turn off the bell, this could be more annoying, but I'm not sure how
 
 " Set list Chars - for showing characters that are not
 " normally displayed i.e. whitespace, tabs, EOL
 "set listchars=trail:.,tab:>-,eol:$
 "set nolist
+set list
+set listchars=tab:>-,trail:~,eol:$
+set listchars=tab:>-,eol:$,trail:~,extends:>,precedes:<
 
 
 " Mouse ***********************************************************************
@@ -299,8 +310,289 @@ let g:AutoComplPop_BehaviorKeywordLength = 2
   "let l:line=substitute(l:line, "^[^\t]*\t./", "", "") 
   "execute ":e ".l:line 
 "endfunction
+" Repair wired terminal/vim settings
+set showmatch  " Show matching brackets.
+
+let mapleader =","
+set hidden
+
+highlight SpellErrors  guibg=Red guifg=Black
+
+set noerrorbells
+
+let xml_jump_string = "`"
+
+set patchmode=.orig
+
+" Enable file type detection.
+" Use the default filetype settings, so that mail gets 'tw' set to 72,
+" 'cindent' is on in C files, etc.
+" Also load indent files, to automatically do language-dependent indenting.
+" Put these in an autocmd group, so that we can delete them easily.
+augroup vimrcEx
+  au!
+
+" For all text files set 'textwidth' to 78 characters.
+autocmd FileType text setlocal textwidth=78
+
+" When editing a file, always jump to the last known cursor position.
+" Don't do it when the position is invalid or when inside an event handler
+" (happens when dropping a file on gvim).
+autocmd BufReadPost *
+      \ if line("'\"") > 0 && line("'\"") <= line("$") |
+      \   exe "normal! g`\"" |
+      \ endif
+
+augroup END
+
+" {{{ Auto commands
+"
+" Automatically reload .vimrc when changing
+autocmd! bufwritepost .vimrc source %
+
+" }}} Auto commands
+" {{{ Settings for indent/scroll/tabs
+
+
+" Linewidth to endless
+set textwidth=0
+
+" Indicate jump out of the screen when 3 lines before end of the screen
+set scrolloff=3
+
+set backupdir=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set directory=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+
+" Correct indentation after opening a phpdocblock and automatic * on every
+" line
+set formatoptions=qroct
+
+set nocp
+
+" }}} Settings
+" {{{ vimspell plugin settings
+" vimspell
+let loaded_vimspell = 1
+let spell_language_list = "english,polish"
+let spell_auto_type="tex,doc,mail,txt,html,xhtml"
+""let spell_auto_type="all"
+" }}} vimspell plugin settings
+" {{{ engspchk settings 
+let g:spchklang = "pol"
+" }}} engspchk settings
+" {{{ My settings
+
+set viminfo+=f1
+" Add recently accessed projects menu (project plugin)
+set viminfo^=!
+
+" Minibuffer Explorer Settings
+let g:miniBufExplMapWindowNavVim = 1
+let g:miniBufExplMapWindowNavArrows = 1
+let g:miniBufExplMapCTabSwitchBufs = 1
+let g:miniBufExplModSelTarget = 1
 
 
 
-"command! -nargs=1 Find :call Find("<args>")
-"map ,f :Fi 
+" Enable folding by fold markers
+set foldmethod=marker 
+
+" Autoclose folds, when moving out of them
+set foldclose=all
+
+" Autoopen folds, when moving on them
+"set foldopen=all
+
+set foldlevel=5
+" identify these encodings
+set fileencodings=utf-8,iso8859-2,cp1250,sjis
+
+" }}} My settings
+" {{{ a.vim settings 
+" change file extensions order
+let g:alternateExtensions_CPP = "inc,hpp,H,HPP"
+let g:alternateExtensions_cpp = "h,hpp"
+let g:alternateExtensions_hpp = "cpp"
+let g:alternateExtensions_CPP = "HPP,H"
+" }}} a.vim settings 
+" {{{ cscope_maps.vim settings
+set nocscopeverbose 
+" }}}
+
+set fillchars=vert:\ ,fold:\ " <- trailing space
+
+set modeline 
+
+" add something similar to the following to your vimrc and place rbcomplete in your autoload directory
+
+
+" if you want buffer/rails/global completion you must add the following:
+
+autocmd FileType ruby,eruby let g:rubycomplete_buffer_loading = 1
+
+" if you want rails support add the following in addition
+
+autocmd FileType ruby,eruby let g:rubycomplete_rails = 1
+autocmd FileType ruby,eruby set makeprg=rake
+autocmd BufNewFile,BufRead *.rb set makeprg=rake
+
+" if you want classes included in global completions add the following
+
+autocmd FileType ruby,eruby let g:rubycomplete_classes_in_global = 1
+autocmd FileType ruby,eruby set errorformat^=%f:%l:,\	from\ %f:%l:in\ %m
+
+" Auto expand tabs to spaces
+set spelllang=en_us
+
+" get out of insert mode
+imap j;kl <esc>
+imap j;lk <esc>
+imap jk;l <esc>
+imap jkl; <esc>
+imap jl;k <esc>
+imap jlk; <esc>
+imap kjl; <esc>
+imap kj;l <esc>
+imap kl;j <esc>
+imap klj; <esc>
+imap k;lj <esc>
+imap k;jl <esc>
+imap ;lkj <esc>
+imap ;ljk <esc>
+imap ;klj <esc>
+imap ;kjl <esc>
+imap ;jlk <esc>
+imap ;jkl <esc>
+imap l;jk <esc>
+imap l;kj <esc>
+imap lkj; <esc>
+imap ljk; <esc>
+imap lk;j <esc>
+imap lj;k <esc>
+imap jj <esc>
+imap l; <esc>
+imap ;l <esc>
+set timeoutlen=300
+
+"set t_Co=256
+"set t_Co=88
+let g:zenburn_high_Contrast=1
+set statusline=%F%m%r%h%w\ [TYPE=%Y\ %{&ff}]\ [%l/%L\ (%p%%)]
+
+hi PreProc term=bold ctermfg=Red term=bold
+map <F4> <ESC><ESC>:hi PreProc ctermfg=darkred<CR>
+
+map µ <ESC><ESC>:mak check<CR>
+
+"Enable indent folding
+set foldenable
+set fdm=indent
+
+"Set space to toggle a fold
+nnoremap <space> za
+
+" Convenient command to see the difference between the current buffer and the
+" file it was loaded from, thus the changes you made.
+command! DiffOrig vert new | set bt=nofile | r # | 0d_ | diffthis
+	 	\ | wincmd p | diffthis
+
+
+
+" Change which file opens after executing :Rails command
+let g:rails_default_file='config/database.yml'
+
+
+
+
+set cf  " Enable error files & error jumping.
+"set clipboard+=unnamed  " Yanks go on clipboard instead.
+set history=1000 " Number of things to remember in history.
+"set autowrite  " Writes on make/shell commands
+"set nu  " Line numbers on
+"set nowrap  " Line wrapping off
+"set timeoutlen=250  " Time to wait after ESC (default causes an annoying delay)
+
+" Formatting (some of these are for coding in C and C++)
+set ts=2  " Tabs are 2 spaces
+set bs=2  " Backspace over everything in insert mode
+set nocp 
+set cinoptions=:0,p0,t0
+set cinwords=if,else,while,do,for,switch,case
+set formatoptions=tcqr
+set cindent
+ 
+" Visual
+set mat=5  " Bracket blinking.
+"set list
+
+" Show $ at end of line and trailing space as ~
+set novisualbell " No blinking .
+set noerrorbells  " No noise.
+set laststatus=2  " Always show status line.
+ 
+" gvim specific
+set mousehide  " Hide mouse after chars typed
+"set mouse=a
+set mouse=
+
+runtime macros/matchit.vim
+
+set wildmenu
+set wildmode=list:longest
+
+
+set nonumber
+
+nmap <silent> <leader>s :set nolist!<CR>
+
+set shortmess=aI
+
+"set g:tex_flavor='latex' 
+
+
+
+autocmd FileType mail :nmap  :w:!aspell -e -c %:e
+
+au BufNewFile,BufRead *.maxima  set filetype=maxima
+
+autocmd FileType cucumber,eruby,yaml,ruby,c,cpp,java,php autocmd BufWritePre <buffer> :call setline(1,map(getline(1,"$"),'substitute(v:val,"\\s\\+$","","")'))
+
+" Don't use Ex mode, use Q for formatting
+map Q gq
+
+"nnoremap ` '
+"noremap ,su <ESC>:sh<CR>
+map º <ESC><ESC>:e Rakefile<CR>:Rake! spec<CR>
+
+" alt+n or alt+p to navigate between entries in QuickFix
+map <silent> <m-p> :cp <cr>
+map <silent> <m-n> :cn <cr>
+
+" F8 - make and run tests
+map <F8> <ESC><ESC><ESC>:mak check<CR>
+map <F7> <ESC><ESC><ESC>:mak run<CR>
+
+" nicer scrolling
+""map <C-U> <C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y>
+""map <C-D> <C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E>
+
+map <F4> :cnext<CR>
+map <S-F4> :cprev<CR>
+nmap <F10> :clist<CR>
+nmap <F11> :cprev<CR>
+nmap <F12> :cnext<CR> 
+
+
+nnoremap <C-e> 3<C-e>
+nnoremap <C-y> 3<C-y>
+
+nnoremap <C-h> gT
+nnoremap <C-l> gt
+
+hi DiffAdd        term=bold ctermbg=17 guibg=DarkBlue
+hi DiffDelete     term=bold ctermfg=10 ctermbg=4 gui=bold guifg=Blue guibg=DarkCyan
+hi DiffText term=italic cterm=bold ctermfg=23 guifg=Yellow ctermbg=11 gui=bold guibg=Black
+hi DiffChange     term=bold ctermbg=82 guifg=DarkCyan guibg=Black
+
+
+" vi: set noexpandtab :
